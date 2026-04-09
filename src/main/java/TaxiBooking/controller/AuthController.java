@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import TaxiBooking.entity.User;
 import TaxiBooking.repository.UserRepository;
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class AuthController 
@@ -35,15 +36,18 @@ public class AuthController
     // STEP 3: Handle user login
     @PostMapping("/user-auth")
     public String userAuth(@RequestParam String name,
-                           @RequestParam String phone) {
+                           @RequestParam String phone,
+                           HttpSession session) {
 
         User user = new User();
         user.setName(name);
         user.setPhone(phone);
 
-        userRepo.save(user);   // save user
+        userRepo.save(user);
 
-        return "redirect:/rides-ui";   // go to rides page
+        session.setAttribute("loggedUser", user); // ✅ IMPORTANT
+
+        return "redirect:/rides-ui";
     }
 	}
 

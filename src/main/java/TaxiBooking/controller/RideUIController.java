@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import TaxiBooking.entity.Ride;
 import TaxiBooking.entity.RideType;
+import TaxiBooking.entity.User;
 import TaxiBooking.repository.RideTypeRepository;
 import TaxiBooking.service.RideService;
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class RideUIController {
@@ -22,10 +24,10 @@ public class RideUIController {
     private RideService service;
 
     // Show ride types
-    @GetMapping("/rides-ui")
-    public String showRides(Model model) {
-        model.addAttribute("rides", repo.findAll());
-        return "rides";
+    @GetMapping("/ride-type/{type}")
+    public String rideTypePage(@PathVariable String type, Model model) {
+        model.addAttribute("type", type);
+        return "ride-details";  // your HTML file name
     }
 
     // Open booking page
@@ -43,6 +45,7 @@ public class RideUIController {
                           @RequestParam String type,
                           @RequestParam String carName,
                           @RequestParam String carImage,
+                          HttpSession session,
                           Model model) {
 
         Ride ride = new Ride();
@@ -52,27 +55,37 @@ public class RideUIController {
         ride.setDistance(distance);
         ride.setType(type);
 
+        // ✅ GET USER FROM SESSION
+        User user = (User) session.getAttribute("loggedUser");
+
+        if (user == null) {
+            return "redirect:/user-login";
+        }
+
+        ride.setUser(user);
+
         Ride savedRide = service.bookRide(ride);
 
-        // 👇 PASS DATA
         model.addAttribute("carName", carName);
         model.addAttribute("carImage", carImage);
-        model.addAttribute("price", savedRide.getFare());   // ⭐ IMPORTANT
+        model.addAttribute("price", savedRide.getFare());
 
         return "success";
     }
     
-    @GetMapping("/ride-type/{type}")
-    public String rideTypePage(@PathVariable String type, Model model) {
+    
+    @GetMapping("/rides-ui")
+    public String showRides(Model model, HttpSession session) {
 
-        model.addAttribute("type", type);
+        User user = (User) session.getAttribute("loggedUser");
 
-        return "ride-details";
-    }
-    
-    
-    
-    
+        if (user == null) {
+            return "redirect:/user-login";  // force login
+        }
+
+        model.addAttribute("rides", repo.findAll());
+        return "rides";
+    } 
     
     
     

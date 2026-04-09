@@ -9,13 +9,12 @@
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-
     background: url('https://images.unsplash.com/photo-1502877338535-766e1452684a') no-repeat center center/cover;
 }
 
 /* overlay */
 .overlay {
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.75);
     min-height: 100vh;
     color: white;
 }
@@ -29,25 +28,32 @@ body {
 /* ride boxes */
 .ride-box {
     background: rgba(255,255,255,0.1);
-    padding: 20px;
+    padding: 25px;
     border-radius: 15px;
     text-align: center;
     transition: 0.3s;
+    cursor: pointer;
 }
 
 .ride-box:hover {
-    transform: scale(1.05);
+    transform: scale(1.08);
     background: rgba(255,255,255,0.2);
+    box-shadow: 0px 0px 15px #ffc107;
 }
 
 /* icons */
 .icon {
-    font-size: 40px;
+    font-size: 45px;
 }
 
 /* cards */
 .card {
     border-radius: 15px;
+    overflow: hidden;
+}
+
+.card img {
+    object-fit: cover;
 }
 </style>
 
@@ -71,9 +77,8 @@ body {
         <!-- STATIC OPTIONS -->
         <div class="row mb-5">
 
-            <!-- ECONOMY -->
             <div class="col-md-4">
-                <a href="/ride-type/Economy" style="text-decoration:none; color:white;">
+                <a th:href="@{/ride-type/{type}(type='Economy')}" style="text-decoration:none; color:white;">
                     <div class="ride-box">
                         <div class="icon">🚗</div>
                         <h4>Economy</h4>
@@ -82,9 +87,8 @@ body {
                 </a>
             </div>
 
-            <!-- PREMIUM -->
             <div class="col-md-4">
-                <a href="/ride-type/Premium" style="text-decoration:none; color:white;">
+                <a th:href="@{/ride-type/{type}(type='Premium')}" style="text-decoration:none; color:white;">
                     <div class="ride-box">
                         <div class="icon">🚖</div>
                         <h4>Premium</h4>
@@ -93,9 +97,8 @@ body {
                 </a>
             </div>
 
-            <!-- FAST -->
             <div class="col-md-4">
-                <a href="/ride-type/Fast" style="text-decoration:none; color:white;">
+                <a th:href="@{/ride-type/{type}(type='Fast')}" style="text-decoration:none; color:white;">
                     <div class="ride-box">
                         <div class="icon">⚡</div>
                         <h4>Fast</h4>
@@ -106,17 +109,17 @@ body {
 
         </div>
 
-        <!-- DYNAMIC RIDES FROM DATABASE -->
+        <!-- DYNAMIC RIDES -->
         <div class="row">
 
             <div class="col-md-4 mb-4" th:each="r : ${rides}">
                 <div class="card p-3 text-dark shadow">
 
-                    <img th:src="${r.imageUrl}" class="card-img-top" height="180">
+                    <img th:src="${r.imageUrl}" class="card-img-top" height="200">
 
                     <h4 class="mt-2" th:text="${r.name}"></h4>
 
-                    <p>₹ <span th:text="${r.price}"></span></p>
+                    <p class="fw-bold">₹ <span th:text="${r.price}"></span></p>
 
                     <a th:href="@{/book/{id}(id=${r.id})}" 
                        class="btn btn-dark w-100">

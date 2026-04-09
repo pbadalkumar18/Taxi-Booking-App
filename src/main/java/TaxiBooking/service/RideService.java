@@ -5,16 +5,15 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import TaxiBooking.entity.Driver;
+
 import TaxiBooking.entity.Ride;
-import TaxiBooking.repository.DriverRepository;
+
 import TaxiBooking.repository.RiderRepository;
 
 @Service
 public class RideService 
 {
-	@Autowired
-    private DriverRepository driverRepo;
+	
 
     @Autowired
     private RiderRepository rideRepo;
@@ -42,6 +41,7 @@ public class RideService
         double fare = baseFare + (ride.getDistance() * perKm);
 
         ride.setFare(fare);
+        System.out.println("ride saved:" +ride.getPickupLocation());
 
         return rideRepo.save(ride);
     }

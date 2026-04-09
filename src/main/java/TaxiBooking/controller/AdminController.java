@@ -7,36 +7,49 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import TaxiBooking.entity.Driver;
+
 import TaxiBooking.entity.RideType;
-import TaxiBooking.repository.DriverRepository;
+
 import TaxiBooking.repository.RideTypeRepository;
+import TaxiBooking.repository.RiderRepository;
 
 @Controller
 public class AdminController {
-	@Autowired
-    private DriverRepository driverRepo;
+
+    private final HomeController homeController;
+	
 
     @Autowired
     private RideTypeRepository rideTypeRepo;
+    @Autowired
+    private RiderRepository riderRepo;
+
+    AdminController(HomeController homeController) {
+        this.homeController = homeController;
+    }
 
     @GetMapping("/admin")
     public String adminPage() {
         return "admin";
     }
-    @PostMapping("/admin")
+    @PostMapping("/admin-login")
     public String adminLogin(@RequestParam String name,
                              @RequestParam String email,
                              @RequestParam String password,
                              Model model) {
 
-        // simple validation (you can customize)
         if(email.equals("admin@gmail.com") && password.equals("1234")) {
+
             model.addAttribute("name", name);
-            return "admin-success";
+
+            // ✅ THIS WAS MISSING
+            model.addAttribute("rides", riderRepo.findAll());
+
+            System.out.println("total rides :"+riderRepo.findAll().size());
+
+            return "admin-dashboard";
         }
 
         return "admin";
     }
-    
 }

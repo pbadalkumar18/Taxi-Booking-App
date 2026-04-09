@@ -32,8 +32,7 @@ public class Ride {
 	public void setDistance(double distance) {
 		this.distance = distance;
 	}
-	@ManyToOne
-    private Driver driver;
+	
 
     @ManyToOne
     private User user;
@@ -69,12 +68,7 @@ public class Ride {
 	public void setStatus(String status) {
 		this.status = status;
 	}
-	public Driver getDriver() {
-		return driver;
-	}
-	public void setDriver(Driver driver) {
-		this.driver = driver;
-	}
+	
 	public User getUser() {
 		return user;
 	}
