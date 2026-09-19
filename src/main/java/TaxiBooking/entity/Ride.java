@@ -38,6 +38,10 @@ public class Ride {
     private User user;
     @ManyToOne
     private RideType rideType;
+    
+    @ManyToOne
+    private Driver driver;
+    
 	public Long getId() {
 		return id;
 	}
@@ -80,6 +84,13 @@ public class Ride {
 	}
 	public void setRideType(RideType rideType) {
 		this.rideType = rideType;
+	}
+	public Driver getDriver() {
+	    return driver;
+	}
+
+	public void setDriver(Driver driver) {
+	    this.driver = driver;
 	}
 
 	

@@ -70,6 +70,9 @@ h2 {
 <th>Drop</th>
 <th>Fare</th>
 <th>Status</th>
+<th>Driver Name</th>
+<th>Driver Phone</th>
+<th>Vehicle Number</th>
 </tr>
 </thead>
 
@@ -83,6 +86,11 @@ h2 {
 <td th:text="${r.dropLocation}"></td>
 <td>₹ <span th:text="${r.fare}"></span></td>
 <td th:text="${r.status}"></td>
+<td th:text="${r.driver != null ? r.driver.name : 'N/A'}"></td>
+
+<td th:text="${r.driver != null ? r.driver.phone : 'N/A'}"></td>
+
+<td th:text="${r.driver != null ? r.driver.vehicleNumber : 'N/A'}"></td>
 </tr>
 
 </tbody>

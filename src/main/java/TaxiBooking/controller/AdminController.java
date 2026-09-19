@@ -42,7 +42,7 @@ public class AdminController {
 
             model.addAttribute("name", name);
 
-            // ✅ THIS WAS MISSING
+            
             model.addAttribute("rides", riderRepo.findAll());
 
             System.out.println("total rides :"+riderRepo.findAll().size());

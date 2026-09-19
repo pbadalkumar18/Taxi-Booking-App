@@ -37,10 +37,48 @@ body {
 
 <h4 th:text="${carName}"></h4>
 <h4>💰 Total Price: ₹ <span th:text="${price}"></span></h4>
+<hr>
 
-<p>🚖 Driver will arrive soon...</p>
+<div th:if="${driver != null}">
 
-<a href="/rides-ui" class="btn btn-warning mt-3">Book Again</a>
+    <h3>🚖 Driver Assigned</h3>
+
+    <p>
+        <b>Name:</b>
+        <span th:text="${driver.name}"></span>
+    </p>
+
+    <p>
+        <b>Phone:</b>
+        <span th:text="${driver.phone}"></span>
+    </p>
+
+    <p>
+        <b>Vehicle Number:</b>
+        <span th:text="${driver.vehicleNumber}"></span>
+    </p>
+
+    <p>🚖 Driver will arrive soon...</p>
+
+</div>
+
+<div th:if="${driver == null}">
+
+    <h3 class="text-danger">No Driver Available</h3>
+
+    <p>Please try again after some time.</p>
+
+</div>
+
+<div class="mt-3">
+    <a th:href="@{/cancel/{id}(id=${ride.id})}" class="btn btn-danger">
+        Cancel Ride
+    </a>
+
+    <a href="/rides-ui" class="btn btn-warning">
+        Book Again
+    </a>
+</div>
 
 </div>
 </div>

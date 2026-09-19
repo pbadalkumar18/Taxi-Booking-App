@@ -61,11 +61,13 @@ public class RideUIController {
         if (user == null) {
             return "redirect:/user-login";
         }
-
         ride.setUser(user);
-
         Ride savedRide = service.bookRide(ride);
 
+        model.addAttribute("ride", savedRide);
+        if(savedRide.getDriver()!=null){
+            model.addAttribute("driver", savedRide.getDriver());
+        }
         model.addAttribute("carName", carName);
         model.addAttribute("carImage", carImage);
         model.addAttribute("price", savedRide.getFare());
@@ -87,7 +89,13 @@ public class RideUIController {
         return "rides";
     } 
     
-    
+    @GetMapping("/cancel/{id}")
+    public String cancelRide(@PathVariable Long id) {
+
+        service.cancelRide(id);
+
+        return "redirect:/rides-ui";
+    }
     
     
     
