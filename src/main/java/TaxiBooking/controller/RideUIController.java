@@ -12,6 +12,7 @@ import TaxiBooking.entity.Ride;
 import TaxiBooking.entity.RideType;
 import TaxiBooking.entity.User;
 import TaxiBooking.repository.RideTypeRepository;
+import TaxiBooking.service.DistanceService;
 import TaxiBooking.service.RideService;
 import jakarta.servlet.http.HttpSession;
 
@@ -22,6 +23,8 @@ public class RideUIController {
 
     @Autowired
     private RideService service;
+    @Autowired
+    private final DistanceService distanceService;
 
     // Show ride types
     @GetMapping("/ride-type/{type}")
@@ -41,7 +44,7 @@ public class RideUIController {
     @PostMapping("/confirm")
     public String confirm(@RequestParam String pickupLocation,
                           @RequestParam String dropLocation,
-                          @RequestParam double distance,
+                         // @RequestParam double distance,
                           @RequestParam String type,
                           @RequestParam String carName,
                           @RequestParam String carImage,
@@ -52,7 +55,26 @@ public class RideUIController {
 
         ride.setPickupLocation(pickupLocation);
         ride.setDropLocation(dropLocation);
+        //ride.setDistance(distance);
+        double distance;
+
+        try {
+            distance = distanceService.calculateDistance(
+                    pickupLocation,
+                    dropLocation
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            model.addAttribute(
+                "error",
+                "Invalid pickup or drop location. Please enter a valid location."
+            );
+
+            return "ride-details";
+        }
         ride.setDistance(distance);
+
         ride.setType(type);
 
         // ✅ GET USER FROM SESSION
@@ -97,7 +119,13 @@ public class RideUIController {
         return "redirect:/rides-ui";
     }
     
-    
+    public RideUIController(
+            RideService service,
+            DistanceService distanceService) {
+
+        this.service = service;
+        this.distanceService = distanceService;
+    }
     
     
 }

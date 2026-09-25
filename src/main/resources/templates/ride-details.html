@@ -4,7 +4,10 @@
 <title>Ride Details</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAvX0BaEoNwmMXXYlle2sa2EkHVJlLWLFQ&libraries=places"></script>
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
 body {
@@ -25,6 +28,195 @@ body {
 
 .card:hover {
     transform: scale(1.05);
+}
+.location-box {
+    position: relative;
+	z-index: 10000;
+}
+
+.suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+
+    background: white;
+    color: black;
+
+    border-radius: 0 0 10px 10px;
+
+    z-index: 9999;
+
+    max-height: 250px;
+    overflow-y: auto;
+
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+    border: 1px solid #ddd;
+}
+
+.suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    transition: background 0.15s;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background: #f5f5f5;
+}
+
+.location-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #f1f1f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+}
+
+.location-text {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.location-name {
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.location-address {
+    font-size: 12px;
+    color: #777;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.route-preview {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f8f8;
+    border-radius: 12px;
+    border: 1px solid #e5e5e5;
+}
+
+.route-point {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.route-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    flex-shrink: 0;
+}
+
+.route-point small {
+    display: block;
+    color: #777;
+    font-size: 11px;
+}
+
+.route-point div div {
+    font-size: 14px;
+    font-weight: 600;
+    color: #222;
+}
+
+.route-line {
+    height: 25px;
+    width: 2px;
+    background: #999;
+    margin-left: 17px;
+}
+.map-container {
+    position: relative;
+    margin-top: 15px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #eee;
+}
+
+#routeMap {
+    height: 350px;
+    width: 100%;
+}
+
+.map-loading {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    color: #333;
+    padding: 8px 14px;
+    border-radius: 20px;
+    z-index: 1000;
+    font-size: 13px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.route-info {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding: 14px;
+    background: white;
+    border-radius: 10px;
+    color: #222;
+}
+
+.route-info div {
+    display: flex;
+    flex-direction: column;
+}
+
+.route-info small {
+    color: #777;
+    font-size: 11px;
+}
+
+.route-info strong {
+    font-size: 16px;
+}
+.fare-info {
+    margin-top: 10px;
+    padding: 16px;
+    background: #222;
+    color: white;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.fare-info small {
+    display: block;
+    color: #ccc;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.fare-info strong {
+    font-size: 24px;
 }
 </style>
 
@@ -178,19 +370,93 @@ Select</button>
 
 <!-- BOOKING FORM -->
 <div class="card p-3 mt-4 text-dark">
+	<div th:if="${error}"
+	        class="alert alert-danger">
+	       <span th:text="${error}"></span>
+	   </div>
 
 <form action="/confirm" method="post">
+	
 	<input type="hidden" name="carName" id="carName">
 	<input type="hidden" name="carImage" id="carImage">
 
 <input type="hidden" name="type" th:value="${type}">
 
-<input type="text" name="pickupLocation" placeholder="Pickup Location" class="form-control mb-2" required>
+<div class="location-box">
+    <input type="text"
+           name="pickupLocation"
+           id="pickupLocation"
+           placeholder="Pickup Location"
+           class="form-control mb-2"
+           autocomplete="off"
+           required>
 
-<input type="text" name="dropLocation" placeholder="Drop Location" class="form-control mb-2" required>
+    <div id="pickupSuggestions" class="suggestions"></div>
+</div>
 
-<input type="number" name="distance" placeholder="Distance (km)" class="form-control mb-2" required>
+<div class="location-box">
+    <input type="text"
+           name="dropLocation"
+           id="dropLocation"
+           placeholder="Drop Location"
+           class="form-control mb-2"
+           autocomplete="off"
+           required>
 
+    <div id="dropSuggestions" class="suggestions"></div>
+</div>
+
+<div id="routePreview" class="route-preview">
+
+    <div class="route-point">
+        <span class="route-icon pickup-icon">📍</span>
+        <div>
+            <small>Pickup</small>
+            <div id="previewPickup">Select pickup location</div>
+        </div>
+    </div>
+	<div id="mapContainer" class="map-container">
+
+	    <div class="map-loading" id="mapLoading">
+	        Select pickup and drop locations
+	    </div>
+
+	    <div id="routeMap"></div>
+
+	</div>
+
+	<div id="routeInfo" class="route-info">
+
+	    <div>
+	        <small>Distance</small>
+	        <strong id="mapDistance">-- km</strong>
+	    </div>
+
+	    <div>
+	        <small>Estimated Time</small>
+	        <strong id="mapDuration">-- min</strong>
+	    </div>
+
+	</div>
+	<div id="fareInfo" class="fare-info">
+
+	    <div>
+	        <small>Estimated Fare</small>
+	        <strong id="estimatedFare">₹--</strong>
+	    </div>
+
+	</div>
+    <div class="route-line"></div>
+
+    <div class="route-point">
+        <span class="route-icon drop-icon">📌</span>
+        <div>
+            <small>Drop</small>
+            <div id="previewDrop">Select drop location</div>
+        </div>
+    </div>
+
+</div>
 <button class="btn btn-dark w-100">Confirm Ride</button>
 
 </form>
@@ -202,6 +468,8 @@ Select</button>
 
 </body>
 </html>
+
+
 <script>
 function selectCar(name, image) {
     document.getElementById("carName").value = name;
@@ -209,4 +477,391 @@ function selectCar(name, image) {
 
     alert(name + " selected 🚗");
 }
+function setupAutocomplete(inputId, suggestionsId) {
+
+    const input = document.getElementById(inputId);
+    const suggestions = document.getElementById(suggestionsId);
+
+    let timeout;
+
+    input.addEventListener("input", function () {
+
+        const query = input.value.trim();
+
+        clearTimeout(timeout);
+
+        if (query.length < 2) {
+            suggestions.innerHTML = "";
+            return;
+        }
+
+        timeout = setTimeout(async function () {
+
+            try {
+
+                const url =
+                    "https://photon.komoot.io/api/?q="
+                    + encodeURIComponent(query)
+                    + "&limit=5";
+
+                const response = await fetch(url);
+
+                const data = await response.json();
+
+                suggestions.innerHTML = "";
+
+                data.features.forEach(function (feature) {
+
+                    const properties = feature.properties;
+
+                    const name =
+                        properties.name || "Unknown location";
+
+                    const city =
+                        properties.city ||
+                        properties.locality ||
+                        "";
+
+                    const state =
+                        properties.state || "";
+
+                    const country =
+                        properties.country || "";
+
+                    const displayName =
+                        [name, city, state, country]
+                        .filter(Boolean)
+                        .join(", ");
+
+                    const address =
+                        [city, state, country]
+                        .filter(Boolean)
+                        .join(", ");
+
+                    const div =
+                        document.createElement("div");
+
+                    div.className = "suggestion-item";
+
+                    div.innerHTML = `
+                        <div class="location-icon">
+                            📍
+                        </div>
+
+                        <div class="location-text">
+
+                            <div class="location-name">
+                                ${name}
+                            </div>
+
+                            <div class="location-address">
+                                ${address}
+                            </div>
+
+                        </div>
+                    `;
+
+                    div.addEventListener("mousedown", function (event) {
+
+                        event.preventDefault();
+
+                        // Put selected location into input
+                        input.value = displayName;
+
+                        // Hide suggestions
+                        suggestions.innerHTML = "";
+
+                        // Get coordinates
+                        const coordinates =
+                            feature.geometry.coordinates;
+
+                        const longitude = coordinates[0];
+                        const latitude = coordinates[1];
+
+
+                        // Pickup
+                        if (inputId === "pickupLocation") {
+
+                            window.pickupCoordinates = {
+                                lat: latitude,
+                                lon: longitude
+                            };
+
+                            document.getElementById(
+                                "previewPickup"
+                            ).textContent = displayName;
+                        }
+
+
+                        // Drop
+                        if (inputId === "dropLocation") {
+
+                            window.dropCoordinates = {
+                                lat: latitude,
+                                lon: longitude
+                            };
+
+                            document.getElementById(
+                                "previewDrop"
+                            ).textContent = displayName;
+                        }
+
+
+                        // Show route when both locations are selected
+                        if (
+                            window.pickupCoordinates &&
+                            window.dropCoordinates
+                        ) {
+
+                            showRoute(
+                                window.pickupCoordinates.lat,
+                                window.pickupCoordinates.lon,
+
+                                window.dropCoordinates.lat,
+                                window.dropCoordinates.lon
+                            );
+
+                        }
+
+                    });
+
+                    suggestions.appendChild(div);
+
+                });
+
+            } catch (error) {
+
+                console.error(
+                    "Location search failed:",
+                    error
+                );
+
+            }
+
+        }, 300);
+
+    });
+
+}
+setupAutocomplete(
+    "pickupLocation",
+    "pickupSuggestions"
+);
+let routeMap = L.map("routeMap").setView(
+    [12.9716, 77.5946],
+    12
+);
+
+L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors"
+    }
+).addTo(routeMap);
+
+
+let pickupMarker = null;
+let dropMarker = null;
+let routeLine = null;
+
+
+// ===============================
+// SHOW ROUTE
+// ===============================
+
+async function showRoute(
+    pickupLat,
+    pickupLon,
+    dropLat,
+    dropLon
+) {
+
+    const loading =
+        document.getElementById("mapLoading");
+
+    loading.textContent =
+        "Calculating route...";
+
+    loading.style.display = "block";
+
+    try {
+
+        const url =
+            "https://router.project-osrm.org/route/v1/driving/"
+            + pickupLon + "," + pickupLat
+            + ";"
+            + dropLon + "," + dropLat
+            + "?overview=full&geometries=geojson";
+
+
+        const response =
+            await fetch(url);
+
+        const data =
+            await response.json();
+
+
+        if (
+            data.code !== "Ok" ||
+            !data.routes ||
+            data.routes.length === 0
+        ) {
+            throw new Error("Route not found");
+        }
+
+
+        const route =
+            data.routes[0];
+
+
+        const distance =
+            route.distance / 1000;
+
+        const duration =
+            route.duration / 60;
+			
+			// ===============================
+			// CALCULATE ESTIMATED FARE
+			// ===============================
+
+			const rideType =
+			    document.querySelector(
+			        'input[name="type"]'
+			    ).value;
+
+			const baseFare = 50;
+
+			let perKm = 0;
+
+			if (rideType === "Economy") {
+
+			    perKm = 8;
+
+			} else if (rideType === "Premium") {
+
+			    perKm = 15;
+
+			} else if (rideType === "Fast") {
+
+			    perKm = 12;
+			}
+
+
+			const estimatedFare =
+			    baseFare + (distance * perKm);
+
+
+			document.getElementById(
+			    "estimatedFare"
+			).textContent =
+			    "₹" + estimatedFare.toFixed(2);
+
+        document.getElementById(
+            "mapDistance"
+        ).textContent =
+            distance.toFixed(2) + " km";
+
+
+        document.getElementById(
+            "mapDuration"
+        ).textContent =
+            Math.round(duration) + " min";
+
+
+        // Remove old markers/route
+
+        if (pickupMarker) {
+            routeMap.removeLayer(pickupMarker);
+        }
+
+        if (dropMarker) {
+            routeMap.removeLayer(dropMarker);
+        }
+
+        if (routeLine) {
+            routeMap.removeLayer(routeLine);
+        }
+
+
+        // Pickup marker
+
+        pickupMarker =
+            L.marker([
+                pickupLat,
+                pickupLon
+            ])
+            .addTo(routeMap)
+            .bindPopup("📍 Pickup");
+
+
+        // Drop marker
+
+        dropMarker =
+            L.marker([
+                dropLat,
+                dropLon
+            ])
+            .addTo(routeMap)
+            .bindPopup("📌 Drop");
+
+
+        // Route coordinates
+
+        const coordinates =
+            route.geometry.coordinates.map(
+                function (coordinate) {
+
+                    return [
+                        coordinate[1],
+                        coordinate[0]
+                    ];
+
+                }
+            );
+
+
+        // Draw route
+
+        routeLine =
+            L.polyline(
+                coordinates,
+                {
+                    weight: 6,
+                    opacity: 0.8
+                }
+            ).addTo(routeMap);
+
+
+        // Zoom to route
+
+        routeMap.fitBounds(
+            routeLine.getBounds(),
+            {
+                padding: [30, 30]
+            }
+        );
+
+
+        loading.style.display = "none";
+
+
+    } catch (error) {
+
+        console.error(
+            "Route calculation failed:",
+            error
+        );
+
+        loading.textContent =
+            "Unable to load route.";
+
+    }
+
+}
+
+setupAutocomplete(
+    "dropLocation",
+    "dropSuggestions"
+);
 </script>
